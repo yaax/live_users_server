@@ -1,5 +1,6 @@
 <?php
 
+// REST API class
 class Api {
 	private $db_name="./db.csv";
 	private $db=null;

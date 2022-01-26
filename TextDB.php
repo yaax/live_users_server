@@ -19,6 +19,7 @@ if(!function_exists('str_putcsv'))
 	}
 }
 
+// Text Database class to manage access for the CSV database file db.csv
 class TextDB
 {
 	private $db_path=null;
