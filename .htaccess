@@ -1,0 +1,11 @@
+RewriteEngine on
+
+<LimitExcept GET POST>
+	Order Allow,Deny
+	Deny from all
+</LimitExcept>
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^.*$ /index.php [L,QSA]
+
