@@ -25,7 +25,10 @@ class TextDB
 	private $db_data=null;
 	const CSV_HEADERS="name,email,session_id,user-agent,ip,created,updated,visits,active,hash,last_active";
 
+	// How many times to try to write to the DB file when many users are trying to access
 	const MAX_RETRIES = 1000;
+
+	// User considered inactive if during last 15 minutes were not accepted any ajax requests from his session id
 	const OFFLINE_TIMEOUT = 900; //900 secs = 15 minutes
 
 	public function __construct($db_filename)
@@ -48,7 +51,11 @@ class TextDB
 
 	public function insert($new_data) {
 		$new_data['active']=1;
+
+		// This way hash will be unique for almost all cases unless number of users will grow to billions which is not supported yet by this task
 		$new_data['hash']=$this->getRandomString(32);
+
+		// This is a last active field
 		$new_data['last_active']=date("Y-m-d H:i:s");
 		$csv_line = str_putcsv($new_data,',','"');
 
@@ -73,6 +80,8 @@ class TextDB
 				if (!empty($session_id)) {
 					$last_active_time = strtotime($new_row['last_active']);
 					$now = time();
+
+					//check if user is offline too long
 					if (($now-$last_active_time)>self::OFFLINE_TIMEOUT) {
 						$new_row['active']=0;
 						$need_update=true;
@@ -94,7 +103,7 @@ class TextDB
 	}
 
 	/**
-	 * Write Data
+	 * Add Data - just add new line into CSV file
 	 *
 	 * @param string $data The data to write.
 	 * @param string $mode Suggested mode 'a' for writing to the end of the
@@ -143,14 +152,12 @@ class TextDB
 	}
 
 	/**
-	 * Update Data
+	 * Update Data - this function will rewrite entire DB file with applying requested changes
 	 *
-	 * @param string $email User account identified by given email
 	 * @param array $data Updated user data
 	 * @param boolean $by_session_only update all users by session id only or by email and session id
-	 * @param string $mode Suggested mode 'r+' waiting for file to be unlocked - then locking it, then reading its actual data then writing updated matching row
-	 *        file.
-	 * @return boolean
+	 * @param string $mode Suggested mode 'r+' waiting for file to be unlocked - then locking it, then reading its actual data then writing updated matching row file.
+	 * @return array
 	 */
 	public function updateData($data, $by_session_only=false, $mode = 'r+')
 	{
@@ -250,6 +257,5 @@ class TextDB
 		$response['body'] = json_encode($this->db_data[$id]);
 		return $response;
 	}
-
 
 }

@@ -3,6 +3,10 @@
 include_once "TextDB.php";
 include_once "Api.php";
 
+// Database format is CSV and not JSON, because CSV format allow to add new line to file without need to rewrite whole file, this way we can prevent bugs on high load moments when many users trying to write to one file
+// Note that unique user is identified by email and session_id as each user can open many browsers/tabs with same email, so each one should be handled as different session
+// All unique users are also identified by hash code in the file db.csv, I preferred to use hash code over autoincrement to prevent possible bugs when many users will try to enter simultaneously so each one will be added as new hash without problem of correct order
+
 ignore_user_abort(true);
 set_time_limit(0);
 ini_set("memory_limit",-1);

@@ -41,9 +41,10 @@ class Api {
 		$response = $this->notFoundResponse();
 
 		switch ($this->requestMethod) {
-			case 'GET':
+			case 'GET': //make API working by GET method for easier development, may be removed in production
 			case 'POST':
 				switch ($this->uri) {
+					//Save new user - can be insert or update
 					case "save_data":
 						if (!$this->validateUser($_REQUEST)) {
 							return $this->unprocessableEntityResponse();
@@ -65,16 +66,21 @@ class Api {
 								return $result;
 							});
 
+							//if found user with same email and session_id then need to update its visits counter
 							$id = array_search($_REQUEST['email'] . ' ' . $_REQUEST['session_id'], $sessions);
 							if ($id !== FALSE) {
 								$update = true;
 								$response = $this->db->updateData($input);
 							}
 						}
+
+						//If this is a new user - then just insert it
 						if (!$update) {
 							$response = $this->createUserFromRequest();
 						}
 						break;
+
+					//Get list of active users, so here we need also to check which users are inactive too long
 					case "list_users":
 						$response['status_code_header'] = 'HTTP/1.1 200 Ok';
 						$response['body'] = json_encode($this->db->readDB($_REQUEST['session_id']));
@@ -83,6 +89,8 @@ class Api {
 							$update_result = $this->db->updateData($input,true);
 						}
 						break;
+
+					// Get user details for display in popup
 					case "get_user":
 						if (empty($_REQUEST['hash']) || !preg_match('/[a-z0-9]+/',$_REQUEST['hash']) ) {
 							return $this->unprocessableEntityResponse();
@@ -101,6 +109,7 @@ class Api {
 							$response['body'] = "Error: user not found";
 						}
 						break;
+
 					default:
 						$response = $this->notFoundResponse();
 						break;
